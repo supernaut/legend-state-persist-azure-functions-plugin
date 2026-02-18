@@ -1,5 +1,11 @@
 # legend-state-persist-azure-functions-plugin
 
+## 1.1.0
+
+### Minor Changes
+
+- d11d81c: Remove breaking import
+
 ## 1.0.1
 
 ### Patch Changes

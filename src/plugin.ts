@@ -4,7 +4,7 @@ import {
   RestError,
   TableClient,
 } from '@azure/data-tables';
-import { InvocationContext } from '@azure/functions';
+import type { InvocationContext } from '@azure/functions';
 
 import { applyChanges, internal } from '@legendapp/state';
 import type { Change } from '@legendapp/state';
