@@ -1,5 +1,11 @@
 # legend-state-persist-azure-functions-plugin
 
+## 1.1.1
+
+### Patch Changes
+
+- 12f3995: Add options validation
+
 ## 1.1.0
 
 ### Minor Changes
