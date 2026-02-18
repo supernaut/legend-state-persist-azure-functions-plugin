@@ -1,8 +1,6 @@
-import {
-  //   observablePersistAzureStorage,
-  type ObservablePersistAzureStorageOptions,
-} from './plugin.js';
-import { test, expect } from 'vitest';
+import { expect, test } from 'vitest';
+
+import { type ObservablePersistAzureStorageOptions } from './plugin.js';
 
 test('observablePersistAzureStorage', () => {
   const options: ObservablePersistAzureStorageOptions = {
@@ -10,6 +8,5 @@ test('observablePersistAzureStorage', () => {
     partitionKey: 'partitionKey',
     tableName: 'tableName',
   };
-  //   const plugin = observablePersistAzureStorage(options);
   expect(options).toBeDefined();
 });

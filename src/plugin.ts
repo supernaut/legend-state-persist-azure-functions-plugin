@@ -1,12 +1,12 @@
 import {
+  type TableEntity,
   odata,
   RestError,
   TableClient,
-  type TableEntity,
 } from '@azure/data-tables';
 import { InvocationContext } from '@azure/functions';
-import { applyChanges, internal } from '@legendapp/state';
 
+import { applyChanges, internal } from '@legendapp/state';
 import type { Change } from '@legendapp/state';
 import type {
   ObservablePersistPlugin,
@@ -16,6 +16,7 @@ import type {
 const { safeParse, safeStringify } = internal;
 
 type EntityData = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: any;
 };
 
@@ -29,10 +30,11 @@ export type ObservablePersistAzureStorageOptions = {
 
 export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
   private readonly client: TableClient;
+  private context: InvocationContext | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private data: Record<string, any> = {};
   private readonly partitionKey: string;
   private readonly tablesReady: Promise<void>;
-  private context: InvocationContext | undefined;
 
   constructor(
     options: ObservablePersistAzureStorageOptions,

@@ -3,6 +3,15 @@ pre-commit:
   jobs:
     - run: pnpm exec prettier -uw {staged_files}
       stage_fixed: true
+    - run: pnpm exec eslint --fix --quiet "{staged_files}"
+      glob:
+        - '*.ts'
+        - '*.js'
+        - '*.tsx'
+        - '*.jsx'
+        - '*.json'
+        - '*.md'
+      stage_fixed: true
 
 # Build commit messages
 # prepare-commit-msg:
