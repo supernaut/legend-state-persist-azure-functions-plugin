@@ -10,11 +10,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  COREPACK_INTEGRITY_KEYS: 0
+
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      COREPACK_INTEGRITY_KEYS: 0
     steps:
       - uses: actions/checkout@v5
 
