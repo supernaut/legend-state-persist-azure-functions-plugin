@@ -43,6 +43,15 @@ export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
     if (context) {
       this.context = context;
     }
+    if (!options.connectionString) {
+      throw new Error('No valid connection string provided');
+    }
+    if (!options.tableName) {
+      throw new Error('No valid table name provided');
+    }
+    if (!options.partitionKey) {
+      throw new Error('No valid partition key provided');
+    }
     this.client = TableClient.fromConnectionString(
       options.connectionString,
       options.tableName,
