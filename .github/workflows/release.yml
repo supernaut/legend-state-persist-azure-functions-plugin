@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COREPACK_INTEGRITY_KEYS: 0
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # to create release (changesets/action)
+      pull-requests: write # to create pull request (changesets/action)
+      id-token: write #  required for provenance and oidc publish
+    # prevents this action from running on forks
+    if: github.repository == 'supernaut/legend-state-persist-azure-functions-plugin'
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v5
+
+      - name: Enable pnpm with corepack
+        run: corepack enable && corepack prepare pnpm@$(cat package.json | jq -r .volta.pnpm) --activate
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: './package.json'
+          cache: pnpm
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup npm registry (OIDC will auto-authenticate)
+        run: |
+          # Create minimal .npmrc without auth token
+          # npm CLI (11.5.1+) will auto-detect OIDC via id-token permission
+          cat > ~/.npmrc << 'EOF'
+          registry=https://registry.npmjs.org/
+          EOF
+
+      - name: Create Release Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          commit: 'chore: release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm with OIDC
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -22,5 +22,6 @@
   },
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "json.schemaDownload.trustedDomains": { "https://unpkg.com": true }
 }
