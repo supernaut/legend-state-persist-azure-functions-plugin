@@ -11,7 +11,14 @@
   ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": ["commitizen", "commitlint", "LEFTHOOK", "legendapp", "sonarjs"],
+  "words": [
+    "commitizen",
+    "commitlint",
+    "LEFTHOOK",
+    "legendapp",
+    "sonarjs",
+    "supernaut"
+  ],
   "ignoreWords": [],
   "import": []
 }

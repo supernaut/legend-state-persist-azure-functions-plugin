@@ -1,5 +1,5 @@
 {
-  "name": "legend-state-persist-azure-functions-plugin",
+  "name": "@supernaut/legend-state-persist-azure-functions-plugin",
   "version": "1.0.0",
   "description": "A plugin for persisting legend state in Azure Functions",
   "author": {
