@@ -1,6 +1,6 @@
 {
   "name": "legend-state-persist-azure-functions-plugin",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A plugin for persisting legend state in Azure Functions",
   "author": {
     "name": "Johannes Axner",
