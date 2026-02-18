@@ -20,5 +20,6 @@
 
     "declaration": true,
     "lib": ["es2022"]
-  }
+  },
+  "exclude": ["dist", "./commitlint.config.mjs"]
 }

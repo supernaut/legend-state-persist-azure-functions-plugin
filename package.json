@@ -7,6 +7,10 @@
     "email": "johannes@axner.org",
     "url": "https://www.axner.org"
   },
+  "engines": {
+    "node": ">= 24.0.0",
+    "pnpm": ">= 10.0.0"
+  },
   "homepage": "https://github.com/supernaut/legend-state-persist-azure-functions-plugin",
   "repository": {
     "type": "git",
@@ -41,6 +45,11 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "lefthook": "^2.1.1",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
@@ -49,5 +58,10 @@
     "@azure/data-tables": "^13.3.2",
     "@azure/functions": "^4.11.2",
     "@legendapp/state": "3.0.0-beta.44"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

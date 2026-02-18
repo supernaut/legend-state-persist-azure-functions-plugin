@@ -21,6 +21,6 @@
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

@@ -17,13 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Get pnpm version
+        run: echo "PNPM_VERSION=$(cat package.json | jq .volta.pnpm)" >> "$GITHUB_ENV"
+      - name: Enable pnpm with corepack
+        run: corepack enable && corepack prepare pnpm@${{env.PNPM_VERSION}} --activate
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: './package.json'
+          cache: pnpm
+          cache-dependency-path: 'pnpm-lock.yaml'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install packages
+        run: pnpm install --frozen-lockfile
 
       - name: Run CI
-        run: npm run ci
+        run: pnpm run ci
