@@ -9,10 +9,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  id-token: write # Required for OIDC
-  contents: read
-
 env:
   COREPACK_INTEGRITY_KEYS: 0
 
@@ -20,6 +16,13 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # to create release (changesets/action)
+      pull-requests: write # to create pull request (changesets/action)
+      id-token: write #  required for provenance and oidc publish
+    # prevents this action from running on forks
+    if: github.repository == 'supernaut/legend-state-persist-azure-functions-plugin'
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v5
@@ -36,11 +39,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request or Publish to npm
+      - name: Setup npm registry (OIDC will auto-authenticate)
+        run: |
+          # Create minimal .npmrc without auth token
+          # npm CLI (11.5.1+) will auto-detect OIDC via id-token permission
+          cat > ~/.npmrc << 'EOF'
+          registry=https://registry.npmjs.org/
+          EOF
+
+      - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@v1
         with:
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish: yarn release
+          commit: 'chore: release'
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm with OIDC
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
