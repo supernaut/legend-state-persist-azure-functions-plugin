@@ -1,0 +1,53 @@
+{
+  "name": "legend-state-persist-azure-functions-plugin",
+  "version": "0.0.0",
+  "description": "A plugin for persisting legend state in Azure Functions",
+  "author": {
+    "name": "Johannes Axner",
+    "email": "johannes@axner.org",
+    "url": "https://www.axner.org"
+  },
+  "homepage": "https://github.com/supernaut/legend-state-persist-azure-functions-plugin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supernaut/legend-state-persist-azure-functions-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/supernaut/legend-state-persist-azure-functions-plugin/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc",
+    "ci": "pnpm run check-format && pnpm run test && pnpm run build",
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "local-release": "changeset version && changeset publish",
+    "prepublishOnly": "pnpm run ci"
+  },
+  "keywords": [
+    "legend state",
+    "azure functions"
+  ],
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.0",
+  "volta": {
+    "node": "24.13.1",
+    "pnpm": "10.30.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.3.2",
+    "@azure/functions": "^4.11.2",
+    "@legendapp/state": "3.0.0-beta.44"
+  }
+}
