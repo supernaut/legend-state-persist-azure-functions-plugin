@@ -21,18 +21,37 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      contents: write # to create release (changesets/action)
-      pull-requests: write # to create pull request (changesets/action)
-      id-token: write #  required for provenance and oidc publish
+      # Git operations and the release pull request use RELEASE_TOKEN, not the
+      # workflow token. `contents: write` remains because `changeset publish`
+      # creates GitHub releases, and `id-token: write` is what npm OIDC and
+      # provenance need. `pull-requests: write` is not listed: GITHUB_TOKEN no
+      # longer opens the pull request.
+      contents: write
+      id-token: write
     # prevents this action from running on forks
     if: github.repository == 'supernaut/legend-state-persist-azure-functions-plugin'
     steps:
+      # Fails loudly and early. The likeliest cause is an expired token, and
+      # without this the run dies at checkout with an opaque 403.
+      - name: Check the release token is present
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error::RELEASE_TOKEN is not set on the 'release' environment, or it has expired and been removed. See RELEASING.md."
+            exit 1
+          fi
+
       - name: Checkout Repo
         uses: actions/checkout@v7
         with:
           # Changesets reads tags and history to work out what to release and to
           # build the changelog. A shallow clone makes it guess.
           fetch-depth: 0
+          # Persist RELEASE_TOKEN for the pushes changesets makes, so the branch
+          # update and the tag are attributed to it rather than to GITHUB_TOKEN.
+          # Anything GITHUB_TOKEN pushes cannot trigger a workflow.
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Enable pnpm with corepack
         run: corepack enable && corepack prepare pnpm@$(cat package.json | jq -r .volta.pnpm) --activate
@@ -59,16 +78,40 @@ jobs:
           registry=https://registry.npmjs.org/
           EOF
 
+      # RELEASE_TOKEN rather than GITHUB_TOKEN. A pull request opened by
+      # GITHUB_TOKEN does not trigger other workflows, so the release pull
+      # request would never get a CI run.
       - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@v1
         with:
           commit: 'chore: release'
+          # Fallback only. The next step renames it once the bumped version is
+          # known. The default is "Version Packages", which is not a valid
+          # conventional commit, and this title becomes the commit message when
+          # the pull request is squashed.
+          title: 'chore: release'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+      # The version cannot be known before `changeset version` has run, so the
+      # title is set afterwards by reading it back off the pushed branch.
+      - name: Put the version in the release pull request title
+        if: steps.changesets.outputs.pullRequestNumber != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          PR_NUMBER: ${{ steps.changesets.outputs.pullRequestNumber }}
+        run: |
+          git fetch origin changeset-release/main
+          version=$(git show origin/changeset-release/main:package.json | jq -r .version)
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "::warning::Could not read the bumped version; leaving the title alone."
+            exit 0
+          fi
+          gh pr edit "$PR_NUMBER" --title "chore: release v${version}"
 
       - name: Publish to npm with OIDC
         if: steps.changesets.outputs.hasChangesets == 'false'
         run: pnpm release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
