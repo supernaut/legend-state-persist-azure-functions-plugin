@@ -1,9 +1,4 @@
-import {
-  type TableEntity,
-  odata,
-  RestError,
-  TableClient,
-} from '@azure/data-tables';
+import { type TableEntity, odata, TableClient } from '@azure/data-tables';
 import type { InvocationContext } from '@azure/functions';
 
 import { applyChanges, internal } from '@legendapp/state';
@@ -15,17 +10,16 @@ import type {
 
 const { safeParse, safeStringify } = internal;
 
-type EntityData = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  content: any;
-};
-
-const METADATA_SUFFIX = '__m';
-
 export type ObservablePersistAzureStorageOptions = {
   connectionString: string;
   partitionKey: string;
   tableName: string;
+};
+
+type EntityData = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any;
+  metadata: PersistMetadata;
 };
 
 export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
@@ -33,8 +27,20 @@ export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
   private context: InvocationContext | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private data: Record<string, any> = {};
+  private metadata: Record<string, PersistMetadata> = {};
   private readonly partitionKey: string;
-  private readonly tablesReady: Promise<void>;
+  private tablesReadyPromise?: Promise<void>;
+
+  /**
+   * Started on first use rather than in the constructor. An eagerly created
+   * promise that nobody awaits becomes an `unhandledRejection` the moment
+   * storage answers `ServerBusy`, which on Node's default
+   * `--unhandled-rejections=throw` can take the worker down.
+   */
+  private get tablesReady(): Promise<void> {
+    this.tablesReadyPromise ??= this.ensureTablesExist();
+    return this.tablesReadyPromise;
+  }
 
   constructor(
     options: ObservablePersistAzureStorageOptions,
@@ -57,24 +63,22 @@ export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
       options.tableName,
     );
     this.partitionKey = options.partitionKey;
-    this.tablesReady = this.ensureTablesExist();
   }
 
-  public deleteMetadata(table: string) {
-    this.deleteTable(table + METADATA_SUFFIX);
+  public async deleteMetadata(table: string) {
+    delete this.metadata[table];
+    await this.save(table);
   }
 
   public async deleteTable(table: string) {
-    if (!this.tablesReady) {
-      return undefined;
-    }
+    await this.tablesReady;
     delete this.data[table];
     const rowKey = this.getRowKey(table);
     await this.client.deleteEntity(this.partitionKey, rowKey);
   }
 
   public getMetadata(table: string): PersistMetadata {
-    return this.getTable(table + METADATA_SUFFIX, {});
+    return this.metadata[table] ?? {};
   }
 
   public getTable(table: string, init: object) {
@@ -102,17 +106,26 @@ export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
       }
   }
 
-  public set(table: string, changes: Change[]): void {
+  /**
+   * Returns the write rather than firing it off unobserved.
+   *
+   * `ObservablePersistPlugin.set` is typed `Promise<any> | void`, so returning
+   * the promise lets Legend State await it and report a failure through
+   * `onSetError`. Previously the call was made and dropped, so a throttled
+   * `upsertEntity` rejected with nobody listening: in production a burst of
+   * these arrived as `RestError at handleErrorResponse` with no operation name,
+   * roughly 180,000 of them a day.
+   */
+  public set(table: string, changes: Change[]): Promise<void> {
     if (!this.data[table]) {
       this.data[table] = {};
     }
     this.data[table] = applyChanges(this.data[table], changes);
-    this.save(table);
+    return this.save(table);
   }
-  public setMetadata(table: string, metadata: PersistMetadata) {
-    table = table + METADATA_SUFFIX;
-    this.data[table] = metadata;
-    this.save(table);
+  public setMetadata(table: string, metadata: PersistMetadata): Promise<void> {
+    this.metadata[table] = metadata;
+    return this.save(table);
   }
   private async createTableIfNotExists(client: TableClient): Promise<void> {
     try {
@@ -133,22 +146,38 @@ export class ObservablePersistAzureStorage implements ObservablePersistPlugin {
     return [this.partitionKey, table].join('-');
   }
 
+  /**
+   * Read `statusCode` structurally rather than narrowing on `instanceof
+   * RestError`. A consumer that resolves its own copy of `@azure/data-tables`
+   * gets a different `RestError` class, and `instanceof` is then false for a
+   * genuine 409: the conflict is rethrown, `ensureTablesExist` rejects, and now
+   * that `save` awaits readiness every write behind it fails, even though the
+   * table was there all along. A 409 from `createTable` only ever means the
+   * table already exists.
+   */
   private isTableAlreadyExists(error: unknown): boolean {
-    return error instanceof RestError && error.statusCode === 409;
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'statusCode' in error &&
+      (error as { statusCode?: unknown }).statusCode === 409
+    );
   }
 
   // Private
   private async save(table: string) {
-    if (!this.tablesReady) {
-      throw new Error('Azure data tables not ready!');
-    }
+    // `this.tablesReady` is a promise, so the previous `if (!this.tablesReady)`
+    // was always false and readiness was never actually waited for.
+    await this.tablesReady;
 
     const dataToSave = this.data[table];
+    const metadataToSave = this.metadata[table] || '';
     const rowKey = this.getRowKey(table);
 
     if (dataToSave !== undefined && dataToSave !== null) {
       const entity: TableEntity = {
         content: safeStringify(dataToSave),
+        metadata: safeStringify(metadataToSave),
         partitionKey: this.partitionKey,
         rowKey,
       };

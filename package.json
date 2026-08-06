@@ -24,10 +24,11 @@
   ],
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "ci": "pnpm run check-format && pnpm run test && pnpm run build",
+    "ci": "pnpm run check-format && pnpm run lint && pnpm run test && pnpm run build",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "local-release": "changeset version && changeset publish",
@@ -42,40 +43,53 @@
     "azure functions"
   ],
   "license": "MIT",
-  "packageManager": "pnpm@10.30.0",
+  "packageManager": "pnpm@11.20.0",
   "volta": {
-    "node": "24.13.1",
-    "pnpm": "10.30.0"
+    "node": "24.19.0",
+    "pnpm": "11.20.0"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.8",
-    "@commitlint/cli": "^20.4.1",
-    "@commitlint/config-conventional": "^20.4.1",
+    "@azure/functions": "^4.16.2",
+    "@changesets/cli": "^2.31.1",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^10.0.1",
-    "@eslint/json": "^1.0.1",
-    "@eslint/markdown": "^7.5.1",
-    "commitizen": "^4.3.1",
+    "@eslint/json": "^2.0.1",
+    "@eslint/markdown": "^8.0.3",
+    "@legendapp/state": "v3.0.0-beta.48",
+    "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^10.0.0",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-perfectionist": "^5.6.0",
-    "eslint-plugin-sonarjs": "^4.0.0",
+    "eslint-plugin-perfectionist": "^5.10.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "eslint-plugin-unused-imports": "^4.4.1",
-    "globals": "^17.3.0",
+    "globals": "^17.9.0",
     "lefthook": "^2.1.1",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0",
-    "vitest": "^4.0.18"
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.66.0",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@azure/data-tables": "^13.3.2",
-    "@azure/functions": "^4.11.2",
-    "@legendapp/state": "3.0.0-beta.44"
+    "@azure/data-tables": "^13.3.2"
+  },
+  "peerDependencies": {
+    "@azure/functions": "^4.0.0",
+    "@legendapp/state": "^3.0.0-beta.48"
+  },
+  "peerDependenciesMeta": {
+    "@azure/functions": {
+      "optional": true
+    }
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

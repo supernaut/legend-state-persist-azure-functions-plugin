@@ -7,7 +7,10 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a release mid-flight. `changeset publish` pushes git tags and
+  # publishes to npm in sequence, so an interrupted run can leave a tag with no
+  # package behind it, which cannot be re-published under the same version.
+  cancel-in-progress: false
 
 env:
   COREPACK_INTEGRITY_KEYS: 0
@@ -25,12 +28,16 @@ jobs:
     if: github.repository == 'supernaut/legend-state-persist-azure-functions-plugin'
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          # Changesets reads tags and history to work out what to release and to
+          # build the changelog. A shallow clone makes it guess.
+          fetch-depth: 0
 
       - name: Enable pnpm with corepack
         run: corepack enable && corepack prepare pnpm@$(cat package.json | jq -r .volta.pnpm) --activate
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: './package.json'
           cache: pnpm
@@ -38,6 +45,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # Full gate rather than just `pnpm build`: this job can publish, and the
+      # CI workflow is a separate run that this one does not wait for.
+      - name: Verify and build
+        run: pnpm run ci
 
       - name: Setup npm registry (OIDC will auto-authenticate)
         run: |
