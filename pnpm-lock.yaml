@@ -10,13 +10,10 @@ importers:
       '@azure/data-tables':
         specifier: ^13.3.2
         version: 13.3.2(supports-color@7.2.0)
+    devDependencies:
       '@azure/functions':
         specifier: ^4.16.2
         version: 4.16.2
-      '@legendapp/state':
-        specifier: v3.0.0-beta.48
-        version: 3.0.0-beta.48(react@19.2.4)
-    devDependencies:
       '@changesets/cli':
         specifier: ^2.31.1
         version: 2.31.1(@types/node@26.1.2)
@@ -35,6 +32,9 @@ importers:
       '@eslint/markdown':
         specifier: ^8.0.3
         version: 8.0.3(supports-color@7.2.0)
+      '@legendapp/state':
+        specifier: v3.0.0-beta.48
+        version: 3.0.0-beta.48(react@19.2.4)
       commitizen:
         specifier: ^4.3.2
         version: 4.3.2(@types/node@26.1.2)(typescript@6.0.3)

@@ -4,13 +4,20 @@ A plugin for persisting [Legend State](https://www.legendapp.com/open-source/sta
 
 ## Installation
 
+`@legendapp/state` is a peer dependency, so install it alongside the plugin. You almost
+certainly have it already, since you need it to create the observable you are persisting.
+
 ```shell
-npm i @supernaut/legend-state-persist-azure-functions-plugin
+npm i @supernaut/legend-state-persist-azure-functions-plugin @legendapp/state
 ```
 
 ```shell
-pnpm add @supernaut/legend-state-persist-azure-functions-plugin
+pnpm add @supernaut/legend-state-persist-azure-functions-plugin @legendapp/state
 ```
+
+`@azure/functions` is an optional peer. It is only used for the `InvocationContext` type
+you may pass in for error logging, so it is erased at build time and you do not need it
+installed unless you already have it, which you will inside an Azure Functions app.
 
 ## Usage
 
