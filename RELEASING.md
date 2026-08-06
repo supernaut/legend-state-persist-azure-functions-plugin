@@ -34,9 +34,9 @@ entry where people will see it.
 ### 2. Merge your PR to `main`
 
 The **Release** workflow runs on every push to `main`. When unreleased changesets are
-present it does not publish. It opens (or updates) a pull request titled **"chore: release
-v2.1.0"**, naming the version it proposes, that consumes the changeset files, bumps the
-version in `package.json` and writes `CHANGELOG.md`.
+present it does not publish. It opens (or updates) a pull request titled
+`chore: release v<version>`, naming the version it proposes, that consumes the changeset
+files, bumps the version in `package.json` and writes `CHANGELOG.md`.
 
 The version cannot be known until `changeset version` has run, so the workflow opens the
 pull request and then renames it from the bumped `package.json`. That title becomes the
