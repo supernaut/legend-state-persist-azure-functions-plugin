@@ -28,7 +28,7 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "ci": "pnpm run check-format && pnpm run test && pnpm run build",
+    "ci": "pnpm run check-format && pnpm run lint && pnpm run test && pnpm run build",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "local-release": "changeset version && changeset publish",
@@ -78,5 +78,9 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

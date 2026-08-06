@@ -43,3 +43,9 @@ syncObservable(state$, {
 const status$ = syncState(state$);
 await when(status$.isPersistLoaded);
 ```
+
+## Releasing
+
+Releases are driven by Changesets and published from GitHub Actions with npm OIDC. Add a
+changeset with `pnpm exec changeset` in your pull request, then merge the generated
+"chore: release" pull request to publish. See [RELEASING.md](./RELEASING.md).
