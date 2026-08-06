@@ -68,8 +68,9 @@ test('does not touch storage until something is persisted', () => {
   createTable.mockClear();
   createTable.mockResolvedValue(undefined);
 
-  new ObservablePersistAzureStorage(options);
+  const plugin = new ObservablePersistAzureStorage(options);
 
+  expect(plugin).toBeInstanceOf(ObservablePersistAzureStorage);
   expect(createTable).not.toHaveBeenCalled();
 });
 
